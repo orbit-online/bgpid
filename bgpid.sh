@@ -42,8 +42,7 @@ bg_waitany() {
 }
 
 bg_block() {
-  [[ -n $BG_PIDS || ${BG_MAXPARALLEL:-4} -eq 0 ]] || return 0
-  local ret=0
+  [[ -n $BG_PIDS && ${BG_MAXPARALLEL:-4} -gt 0 ]] || return 0
   while [[ ${#BG_PIDS[@]} -ge ${BG_MAXPARALLEL:-4} ]]; do
     bg_waitany || return $?
   done
