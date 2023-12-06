@@ -52,6 +52,7 @@ sleep_ret() {
   bg_run sleep_ret 10
   bg_run sleep_ret 10
   bg_run sleep_ret 10
+  sleep 1 # Allow close_non_std_fds to run
   bg_killall
   sleep .2
   [ "$(jobs -p)" = '' ]
