@@ -86,13 +86,20 @@ When `BG_FAIL=true` return early if any of the processes exit with a
 non-zero code.  
 When `BG_FAIL=false` ignore exit codes from all processes and always return `0`.
 
+#### bg_init()
+
+Initializes `$BG_PIDS` and `$BG_PIDS_OWNER`. This function is useful if you
+intend to read or modify `$BG_PIDS`.
+
 ### Global variables
 
 #### $BG_PIDS
 
 Array containing the background PIDs bgpid is aware of. You may manually add
 PIDs to it (`BG_PIDS+=($!)`) if the API does not satisfy a use-case, this does
-not interfere with the inner workings of bgpid.
+not interfere with the inner workings of bgpid.  
+However, to make sure you are not working with the array that was inherited from
+a parent process run `bg_init()` first.
 
 #### $BG_MAXPARALLEL
 
@@ -119,3 +126,9 @@ _Note: This is needed because calling `wait -n id...` returns the status of all
 stopped processes, meaning failing exit codes may be hidden. If you know of a
 way to block the process until a PID changes status and then get the exit code
 of only that process, please open an issue, I'm all ears._
+
+#### $BG_PIDS_OWNER
+
+`$BG_PIDS` is a global variable (and therefore visible in subprocesses).
+In order to maintain separation between parent and child processes,
+this variable contains the owning process PID of `$BG_PIDS`.

@@ -69,6 +69,16 @@ sleep_ret() {
   bg_waitall
 }
 
+@test 'subshell invocations do not inherit BG_PIDS' {
+  bg_run ret 1
+  (bg_waitall)
+}
+
+@test 'bg_init fails when BASHPID is not set' {
+  unset BASHPID
+  ! bg_run ret 1 || false
+}
+
 
 # See
 # https://bats-core.readthedocs.io/en/stable/gotchas.html#background-tasks-prevent-the-test-run-from-terminating-when-finished
