@@ -26,7 +26,7 @@ bg_waitany() {
   local pid bg_new_pids=()
   if ${BG_FAIL:-true}; then
     local found=false ret=0
-    while true; do
+    while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
       for pid in "${BG_PIDS[@]}"; do
         if ! $found && ! kill -0 "$pid" 2>/dev/null; then
           wait -n "$pid" 2>/dev/null || ret=$?
