@@ -43,7 +43,7 @@ bg_waitany() {
       sleep "${BG_POLLRATE:-0.05}"
     done
   else
-    wait -n "${BG_PIDS}" || true
+    wait -n "${BG_PIDS}" 2>/dev/null || true
     for pid in "${BG_PIDS[@]}"; do ! kill -0 "$pid" 2>/dev/null || bg_new_pids+=("$pid"); done
     BG_PIDS=("${bg_new_pids[@]}")
     return 0
