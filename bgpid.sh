@@ -23,10 +23,10 @@ bg_run() {
 
 bg_waitany() {
   [[ $BG_PIDS_OWNER = "$BASHPID" && -n $BG_PIDS ]] || return 0
+  local pid bg_new_pids=()
   if ${BG_FAIL:-true}; then
-    local pid found=false bg_new_pids ret=0
+    local found=false ret=0
     while true; do
-      bg_new_pids=()
       for pid in "${BG_PIDS[@]}"; do
         if ! $found && ! kill -0 "$pid" 2>/dev/null; then
           wait -n "$pid" 2>/dev/null || ret=$?
@@ -39,8 +39,10 @@ bg_waitany() {
         BG_PIDS=("${bg_new_pids[@]}")
         ${BG_FAIL:-true} || return 0
         return $ret
+      else
+        bg_new_pids=()
+        sleep "${BG_POLLRATE:-0.05}"
       fi
-      sleep "${BG_POLLRATE:-0.05}"
     done
   else
     wait -n "${BG_PIDS}" 2>/dev/null || true
