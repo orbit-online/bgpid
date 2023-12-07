@@ -22,7 +22,7 @@ bg_run() {
 }
 
 bg_waitany() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && -n $BG_PIDS ]] || return 0
+  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
   local pid bg_new_pids=()
   if ${BG_FAIL:-true}; then
     local found=false ret=0
@@ -53,7 +53,7 @@ bg_waitany() {
 }
 
 bg_block() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && ${BG_MAXPARALLEL:-4} -gt 0 && -n $BG_PIDS ]] || return 0
+  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 && ${BG_MAXPARALLEL:-4} -gt 0 ]] || return 0
   while [[ ${#BG_PIDS[@]} -ge ${BG_MAXPARALLEL:-4} ]]; do
     bg_waitany || return $?
   done
@@ -61,13 +61,13 @@ bg_block() {
 }
 
 bg_killall() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && -n $BG_PIDS ]] || return 0
+  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
   kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
   return 0
 }
 
 bg_waitall() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && -n $BG_PIDS ]] || return 0
+  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
   while [[ ${#BG_PIDS[@]} -gt 0 ]]; do bg_waitany || return $?; done
   return 0
 }
