@@ -114,6 +114,14 @@ Whether to propagate failures of background processes.
 
 Default: `true`
 
+This is useful for e.g. traps that should block the exit of a script until all
+processes have terminated regardless of whether any of them exit with `$? != 0`:
+
+```
+# Terminate all bg processes when an error occurs, and wait for them to exit
+trap "bg_killall; BG_FAIL=false bg_waitall" ERR
+```
+
 #### $BG_POLLRATE
 
 Not used when `BG_FAIL=false`.  
