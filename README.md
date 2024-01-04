@@ -49,11 +49,8 @@ Returns early and does not start `...cmd` when `bg_block` fails.
 
 #### bg_waitany()
 
-When `BG_FAIL=true` wait for exactly one process in `$BG_PIDS` to exit.  
-Returns the exit code of the process that exited.
-
-When `BG_FAIL=true` wait for one or more processes in `$BG_PIDS` to exit.  
-Always returns `0`.
+Wait for exactly one process in `$BG_PIDS` to exit.  
+Then, if `BG_FAIL=true`, return its exit code, otherwise return 0.
 
 #### bg_block()
 
