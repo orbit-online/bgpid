@@ -1,83 +1,101 @@
 #!/usr/bin/env bats
 # shellcheck disable=1065,2030,2031,2034
 
-load "$BATS_TEST_DIRNAME/bgpid.sh"
-
 setup_file() {
   bats_require_minimum_version 1.5.0
 }
 
 setup() {
-  bats_require_minimum_version 1.5.0
-  BG_MAXPARALLEL=4
-  BG_FAIL=true
+  export BG_MAXPARALLEL=4
+  export BG_FAIL=true
 }
 
 ret() {
-  close_non_std_fds
   return "${1:-0}"
 }
+export -f ret
 
 sleep_ret() {
-  close_non_std_fds
   sleep "${1:-.3}"
   return "${2:-0}"
 }
+export -f sleep_ret
+
+@test 'bg_waitall returns 0 when all processes succeed' {
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
+  bg_run true
+  bg_waitall
+  "
+}
 
 @test 'bg_waitall does not return before all exited' {
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
   bg_run sleep_ret
   bg_run sleep_ret
   bg_waitall
-  [ "$(jobs -p)" = '' ]
+  [ \"\$(jobs -p)\" = '' ]"
 }
 
 @test 'bg_waitall fails when any process fails' {
+  ! bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
   bg_run ret
   bg_run ret
   bg_run ret
   bg_run ret 1
-  ! bg_waitall || false
+  bg_waitall
+  " || false
 }
 
 @test 'bg_run fails when bg_block fails' {
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
   bg_run ret 1
   bg_run ret
   bg_run ret
   bg_run ret
   # bg_waitany unshifts the first process and fails
-  ! bg_run ret || false
+  ! bg_run ret
+  "
 }
 
 @test 'bg_killall sends signal to all processes' {
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
   bg_run sleep_ret 10
   bg_run sleep_ret 10
   bg_run sleep_ret 10
-  sleep 1 # Allow close_non_std_fds to run
   bg_killall
   sleep .2
-  [ "$(jobs -p)" = '' ]
+  [ \"\$(jobs -p)\" = '' ]
+  "
 }
 
 @test 'bg_block blocks then fails if a process fails' {
+  ! bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
   BG_MAXPARALLEL=1
   bg_run sleep_ret .1 1
-  ! bg_block || false
+  bg_block
+  " || false
 }
 
 @test 'bg_waitall does not fail when BG_FAIL=false' {
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
   BG_FAIL=false
   bg_run ret 1
   bg_waitall
+  "
 }
 
 @test 'subshell invocations do not inherit BG_PIDS' {
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
   bg_run ret 1
   (bg_waitall)
+  "
 }
 
 @test 'bg_init fails when BASHPID is not set' {
+  ! bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh
   unset BASHPID
-  ! bg_run ret 1 || false
+  bg_run ret 1
+  " || false
 }
 
 
@@ -138,6 +156,7 @@ get_open_fds() {
     exit 1
   fi
 }
+export -f get_open_fds
 
 close_non_std_fds() {
   local open_fds non_std_fds=()
@@ -149,9 +168,11 @@ close_non_std_fds() {
   done
   close_fds "${non_std_fds[@]}"
 }
+export -f close_non_std_fds
 
 function close_fds() { # <fds...>
   for fd in "$@"; do
     eval "exec $fd>&-"
   done
 }
+export -f close_fds
