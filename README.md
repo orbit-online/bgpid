@@ -121,7 +121,6 @@ trap "bg_killall; BG_FAIL=false bg_waitall" ERR
 
 #### $BG_POLLRATE
 
-Not used when `BG_FAIL=false`.  
 The rate in seconds at which `bg_waitany()` should check whether one of the
 background processes has exited.
 
