@@ -22,8 +22,8 @@ bg_run() {
 }
 
 bg_killall() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
-  kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
+  [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
+  [[ ${#BG_PIDS[@]} -eq 0 ]] || kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
   return 0
 }
 
@@ -32,11 +32,10 @@ bg_block() {
 }
 
 bg_drain() {
-  local lvl=${1:-0} cont=${2:-true}
-  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt $lvl ]] || return 0
-  local cur_ret ret=0
+  [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
+  local lvl=${1:-0} cont=${2:-true} ret=0
   while [[ ${#BG_PIDS[@]} -gt $lvl ]]; do
-    cur_ret=0
+    local cur_ret=0
     bg_waitany || cur_ret=$?
     [[ $cur_ret != 0 ]] || continue
     if $cont; then
@@ -49,7 +48,7 @@ bg_drain() {
 }
 
 bg_waitany() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
+  [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
   local pid found=false ret=0 bg_new_pids=()
   while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
     for pid in "${BG_PIDS[@]}"; do
