@@ -23,8 +23,7 @@ upkg install -g orbit-online/bgpid@<VERSION>
 
 #### bg_add(pid)
 
-Add the given PID to `$BG_PIDS`, then run `bg_block` before returning.  
-Fails when `bg_block` fails (but will still add the PID).
+Add the given PID to `$BG_PIDS`, then run `bg_block`.
 
 Useful when running subshells that you don't want to wrap in a function, e.g.:
 
@@ -45,31 +44,26 @@ processes than `$BG_MAXPARALLEL` allows. If you are fine with
 
 Run `bg_block`, then start `...cmd` in the background and add its PID to
 `$BG_PIDS`.  
-Returns early and does not start `...cmd` when `bg_block` fails.
+Does not start `...cmd` if `bg_block` fails.
+
+#### bg_block()
+
+Runs `bg_drain $BG_MAXPARALLEL-1` (unless `$BG_MAXPARALLEL=0`, then it just
+returns 0).  
+If `bg_drain` returns a non-zero exit code, `kill -$BG_SIGNAL` is called for all
+remaining processes (if set), and then `bg_drain 0` is called.
+Returns `0` or the return code of `bg_drain 0` on failure.
+
+#### bg_drain([LVL=0])
+
+Wait until there are no more than `LVL` running processes.  
+Return `0` if all processes that completed while draining returned `0`
+otherwise return the exit code of the last failed process.
 
 #### bg_waitany()
 
 Wait for exactly one process in `$BG_PIDS` to exit and returns its exit code.  
 Returns `0` when no processes are running.
-
-#### bg_killall([SIGNAL=TERM])
-
-Send `SIGNAL` to all processes in `$BG_PIDS`.
-
-Default signal: `TERM`
-
-#### bg_block()
-
-Runs `bg_drain $BG_MAXPARALLEL-1` (unless `$BG_MAXPARALLEL=0`, then it just
-returns 0).
-
-#### bg_drain([LVL=0 CONT=true])
-
-Wait until there are no more than `LVL` running processes.  
-When `CONT=true` return `0` if all processes that completed while draining
-returned `0` otherwise return the exit code of the last failed process.  
-When `CONT=false` return early if any of the processes exit with a non-zero
-code.
 
 #### bg_init()
 
@@ -85,6 +79,14 @@ PIDs to it (`BG_PIDS+=($!)`) if the API does not satisfy a use-case, this does
 not interfere with the inner workings of bgpid.  
 However, to make sure you are not working with the array that was inherited from
 a parent process run `bg_init()` first.
+
+#### $BG_SIGNAL
+
+The signal to send to processes when `bg_block` fails. Set this when you run
+processes that do not quit on their own or do not want to wait for the remaining
+processes to complete normally before failing in the parent process.
+
+Default: `<UNSET>`
 
 #### $BG_MAXPARALLEL
 

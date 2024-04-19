@@ -21,28 +21,24 @@ bg_run() {
   "$@" & BG_PIDS+=($!)
 }
 
-bg_killall() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
-  [[ ${#BG_PIDS[@]} -eq 0 ]] || kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
-  return 0
-}
-
 bg_block() {
-  [[ ${BG_MAXPARALLEL:-4} -eq 0 ]] || bg_drain $((${BG_MAXPARALLEL:-4} - 1))
+  [[ ${BG_MAXPARALLEL:-4} -gt 0 ]] || return 0
+  local ret=0
+  bg_drain $((${BG_MAXPARALLEL:-4} - 1)) || ret=$?
+  if [[ $ret -gt 0 ]]; then
+    if [[ -n $BG_SIGNAL ]]; then
+      [[ ${#BG_PIDS[@]} -eq 0 ]] || kill -"$BG_SIGNAL" "${BG_PIDS[@]}" 2>/dev/null || true
+    fi
+    bg_drain 0 || ret=$?
+  fi
+  return $ret
 }
 
 bg_drain() {
   [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
-  local lvl=${1:-0} cont=${2:-true} ret=0
+  local lvl=${1:-0} ret=0
   while [[ ${#BG_PIDS[@]} -gt $lvl ]]; do
-    local cur_ret=0
-    bg_waitany || cur_ret=$?
-    [[ $cur_ret != 0 ]] || continue
-    if $cont; then
-      ret=$cur_ret
-    else
-      return $cur_ret
-    fi
+    bg_waitany || ret=$?
   done
   return $ret
 }

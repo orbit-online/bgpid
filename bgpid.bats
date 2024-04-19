@@ -45,40 +45,33 @@ export -f sleep_ret
   [ \"\$(jobs -p)\" = '' ]"
 }
 
-@test 'bg_drain(0 false) exits early when any process fails' {
+@test 'bg_run drains and fails when a previous process has failed' {
+  local start
+  start=$(date +%s)
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
-  bg_run sleep_ret
+  bg_run sleep_ret 2
   bg_run ret 1
-  ! bg_drain 0 false
-  [ \"\$(jobs -p)\" != '' ]
-  "
-}
-
-@test 'bg_run fails when bg_block fails' {
-  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
-  BG_MAXPARALLEL=1
-  bg_run ret 1
+  bg_run ret
+  bg_run ret
   ! bg_run ret
-  "
-}
-
-@test 'bg_killall sends signal to all processes' {
-  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
-  bg_run sleep_ret 10
-  bg_run sleep_ret 10
-  bg_run sleep_ret 10
-  bg_killall
-  sleep .2
   [ \"\$(jobs -p)\" = '' ]
   "
+  (($(date +%s) - start > 1)) || false
 }
 
-@test 'bg_block blocks then fails if a process fails' {
+@test 'bg_run kills, drains and fails when BG_SIGNAL=TERM and a previous process has failed' {
+  local start
+  start=$(date +%s)
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
-  BG_MAXPARALLEL=1
-  bg_run sleep_ret .1 1
-  ! bg_block
+  BG_SIGNAL=TERM
+  bg_run sleep_ret 2
+  bg_run sleep_ret 2
+  bg_run sleep_ret 2
+  bg_run ret 1
+  ! bg_run ret
+  [ \"\$(jobs -p)\" = '' ]
   "
+  (($(date +%s) - start < 1)) || false
 }
 
 @test 'subshell invocations do not inherit BG_PIDS' {
