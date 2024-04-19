@@ -8,6 +8,7 @@ Tooling for handling background processes in Bash.
 - [Usage](#usage)
   - [Functions](#functions)
   - [Global variables](#global-variables)
+  - [Examples](#examples)
 
 ## Installation
 
@@ -107,3 +108,24 @@ of only that process, please open an issue, I'm all ears._
 `$BG_PIDS` is a global variable (and therefore visible in subprocesses).
 In order to maintain separation between parent and child processes,
 this variable contains the owning process PID of `$BG_PIDS`.
+
+### Examples
+
+#### Run a set of tasks and wait for completion
+
+```
+for task in "${tasks[@]}; do
+  bg_run run_task "$task"
+done
+bg_block 0
+```
+
+#### Run a set of watchers and exit when any of them fails
+
+```
+BG_MAXPARALLEL=-1 BG_SIGNAL=TERM
+bg_run program --watch
+bg_run other-program --wait
+bg_run server --foreground
+bg_block 0
+```
