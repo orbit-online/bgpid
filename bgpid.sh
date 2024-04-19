@@ -60,6 +60,11 @@ bg_killall() {
 
 bg_waitall() {
   [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
-  while [[ ${#BG_PIDS[@]} -gt 0 ]]; do bg_waitany || return $?; done
-  return 0
+  local ret=0
+  while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
+    ! BG_FAIL=true bg_waitany || continue
+    ! $BG_FAIL || return 1
+    ret=1
+  done
+  return $ret
 }

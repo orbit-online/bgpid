@@ -81,7 +81,8 @@ BG_FAIL=false bg_waitall
 Wait for all processes in `$BG_PIDS` to exit.  
 When `BG_FAIL=true` return early if any of the processes exit with a
 non-zero code.  
-When `BG_FAIL=false` ignore exit codes from all processes and always return `0`.
+When `BG_FAIL=false` wait for all processes to complete and return `0` if all
+processes returned `0` otherwise `1`.
 
 #### bg_init()
 
