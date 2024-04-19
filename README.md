@@ -37,9 +37,9 @@ bg_block
 bg_waitall
 ```
 
-Note that `bg_block` must be run in order to not launch more processes than
-`$BG_MAXPARALLEL` allows. If you are fine with `$BG_MAXPARALLEL + 1` you can
-omit it.
+Note that `bg_block` must be run before `bg_add` in order to not launch more
+processes than `$BG_MAXPARALLEL` allows. If you are fine with
+`$BG_MAXPARALLEL + 1` you can omit it.
 
 #### bg_run(...cmd)
 
@@ -49,40 +49,30 @@ Returns early and does not start `...cmd` when `bg_block` fails.
 
 #### bg_waitany()
 
-Wait for exactly one process in `$BG_PIDS` to exit.  
-Then, if `BG_FAIL=true`, return its exit code, otherwise return 0.
+Wait for exactly one process in `$BG_PIDS` to exit and returns its exit code.  
+Returns `0` when no processes are running.
 
 #### bg_block()
 
 Block as long as the current number of PIDs in `$BG_PIDS` is equal to or exceeds
 `$BG_MAXPARALLEL`.  
-Returns early if any of the processes exit with a non-zero code and
-`BG_FAIL=true`, otherwise always returns `0`.
+Returns the exit code of the process whose completion resolved the blocking (if
+any, otherwise `0`)
 
-#### bg_killall([SIGNAL])
+#### bg_killall([SIGNAL=TERM])
 
 Send `SIGNAL` to all processes in `$BG_PIDS`.
 
 Default signal: `TERM`
 
-It is recommended to wait for the processes afterwards with `bg_waitall`.
-Note that most processes will exit with `$? > 0` when terminated unexpectedly,
-so if you want to continue the script after waiting, you may want to set
-`BG_FAIL=false` for that call only:
-
-```
-bg_run do something
-bg_killall
-BG_FAIL=false bg_waitall
-```
-
-#### bg_waitall()
+#### bg_waitall([CONT=true])
 
 Wait for all processes in `$BG_PIDS` to exit.  
-When `BG_FAIL=true` return early if any of the processes exit with a
-non-zero code.  
-When `BG_FAIL=false` wait for all processes to complete and return `0` if all
-processes returned `0` otherwise `1`.
+When `CONT=true` wait for all processes to complete and return `0` if all
+processes returned `0` otherwise return the exit code of the last failed
+process.  
+When `CONT=false` return early if any of the processes exit with a non-zero
+code.
 
 #### bg_init()
 
@@ -105,20 +95,6 @@ The maximum number of processes to run in parallel.
 Set to `0` to disable the limit.
 
 Default: `4`
-
-#### $BG_FAIL
-
-Whether to propagate failures of background processes.
-
-Default: `true`
-
-This is useful for e.g. traps that should block the exit of a script until all
-processes have terminated regardless of whether any of them exit with `$? != 0`:
-
-```
-# Terminate all bg processes when an error occurs, and wait for them to exit
-trap "bg_killall; BG_FAIL=false bg_waitall" ERR
-```
 
 #### $BG_POLLRATE
 

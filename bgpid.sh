@@ -35,7 +35,6 @@ bg_waitany() {
     done
     if $found; then
       BG_PIDS=("${bg_new_pids[@]}")
-      ${BG_FAIL:-true} || return 0
       return $ret
     else
       bg_new_pids=()
@@ -46,10 +45,11 @@ bg_waitany() {
 
 bg_block() {
   [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 && ${BG_MAXPARALLEL:-4} -gt 0 ]] || return 0
+  local ret=0
   while [[ ${#BG_PIDS[@]} -ge ${BG_MAXPARALLEL:-4} ]]; do
-    bg_waitany || return $?
+    bg_waitany || ret=$?
   done
-  return 0
+  return $ret
 }
 
 bg_killall() {
@@ -60,11 +60,16 @@ bg_killall() {
 
 bg_waitall() {
   [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
-  local ret=0
+  local cur_ret ret=0
   while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
-    ! BG_FAIL=true bg_waitany || continue
-    ! $BG_FAIL || return 1
-    ret=1
+    cur_ret=0
+    bg_waitany || cur_ret=$?
+    [[ $cur_ret != 0 ]] || continue
+    if $BG_FAIL; then
+      return $cur_ret
+    else
+      ret=$cur_ret
+    fi
   done
   return $ret
 }
