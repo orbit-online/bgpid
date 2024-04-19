@@ -47,6 +47,11 @@ Run `bg_block`, then start `...cmd` in the background and add its PID to
 `$BG_PIDS`.  
 Does not start `...cmd` if `bg_block` fails.
 
+#### bg_killall([SIGNAL=TERM])
+
+Kill all running processes and wait for them to exit.  
+Always returns `0`.
+
 #### bg_block([MAX=$BG_MAX_PARALLEL])
 
 Wait until there are no more than `$MAX` running processes
@@ -123,6 +128,7 @@ bg_block 0
 #### Run a set of watchers and exit when any of them fails
 
 ```
+trap bg_killall SIGTERM SIGHUP SIGINT ERR
 BG_MAXPARALLEL=-1 BG_SIGNAL=TERM
 bg_run program --watch
 bg_run other-program --wait

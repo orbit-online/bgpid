@@ -21,6 +21,14 @@ bg_run() {
   "$@" & BG_PIDS+=($!)
 }
 
+bg_killall() {
+  [[ ${#BG_PIDS[@]} -eq 0 ]] || kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
+  while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
+    bg_waitany || true
+  done
+  return 0
+}
+
 # shellcheck disable=2120
 bg_block() {
   local lvl=$1

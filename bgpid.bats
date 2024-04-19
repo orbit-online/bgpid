@@ -101,6 +101,18 @@ export -f sleep_ret
   (($(date +%s) - start < 1)) || false
 }
 
+@test 'bg_killall kills all processes' {
+  local start
+  start=$(date +%s)
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
+  bg_run sleep_ret 3
+  bg_run sleep_ret 3
+  bg_run sleep_ret 3
+  bg_killall
+  "
+  (($(date +%s) - start < 1)) || false
+}
+
 @test 'subshell invocations do not inherit BG_PIDS' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run ret 1
