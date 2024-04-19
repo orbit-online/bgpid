@@ -21,35 +21,35 @@ sleep_ret() {
 }
 export -f sleep_ret
 
-@test 'bg_waitall returns 0 when all processes succeed' {
+@test 'bg_drain returns 0 when all processes succeed' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run true
-  bg_waitall
+  bg_drain
   "
 }
 
-@test 'bg_waitall does not return before all exited' {
+@test 'bg_drain does not return before all exited' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run sleep_ret
   bg_run sleep_ret
-  bg_waitall
+  bg_drain
   [ \"\$(jobs -p)\" = '' ]"
 }
 
-@test 'bg_waitall returns 1 when a process fails but not before all exited' {
+@test 'bg_drain returns 1 when a process fails but not before all exited' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   BG_FAIL=false
   bg_run sleep_ret
   bg_run ret 1
-  ! bg_waitall
+  ! bg_drain
   [ \"\$(jobs -p)\" = '' ]"
 }
 
-@test 'bg_waitall(false) exits early when any process fails' {
+@test 'bg_drain(0 false) exits early when any process fails' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run sleep_ret
   bg_run ret 1
-  ! bg_waitall
+  ! bg_drain 0 false
   [ \"\$(jobs -p)\" != '' ]
   "
 }
@@ -84,7 +84,7 @@ export -f sleep_ret
 @test 'subshell invocations do not inherit BG_PIDS' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run ret 1
-  (bg_waitall)
+  (bg_drain)
   "
 }
 

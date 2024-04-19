@@ -21,6 +21,33 @@ bg_run() {
   "$@" & BG_PIDS+=($!)
 }
 
+bg_killall() {
+  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
+  kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
+  return 0
+}
+
+bg_block() {
+  [[ ${BG_MAXPARALLEL:-4} -eq 0 ]] || bg_drain $((${BG_MAXPARALLEL:-4} - 1))
+}
+
+bg_drain() {
+  local lvl=${1:-0} cont=${2:-true}
+  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt $lvl ]] || return 0
+  local cur_ret ret=0
+  while [[ ${#BG_PIDS[@]} -gt $lvl ]]; do
+    cur_ret=0
+    bg_waitany || cur_ret=$?
+    [[ $cur_ret != 0 ]] || continue
+    if $cont; then
+      ret=$cur_ret
+    else
+      return $cur_ret
+    fi
+  done
+  return $ret
+}
+
 bg_waitany() {
   [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
   local pid found=false ret=0 bg_new_pids=()
@@ -41,35 +68,4 @@ bg_waitany() {
       sleep "${BG_POLLRATE:-0.05}"
     fi
   done
-}
-
-bg_block() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 && ${BG_MAXPARALLEL:-4} -gt 0 ]] || return 0
-  local ret=0
-  while [[ ${#BG_PIDS[@]} -ge ${BG_MAXPARALLEL:-4} ]]; do
-    bg_waitany || ret=$?
-  done
-  return $ret
-}
-
-bg_killall() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
-  kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
-  return 0
-}
-
-bg_waitall() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" && ${#BG_PIDS[@]} -gt 0 ]] || return 0
-  local cur_ret ret=0
-  while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
-    cur_ret=0
-    bg_waitany || cur_ret=$?
-    [[ $cur_ret != 0 ]] || continue
-    if $BG_FAIL; then
-      return $cur_ret
-    else
-      ret=$cur_ret
-    fi
-  done
-  return $ret
 }

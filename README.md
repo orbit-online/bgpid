@@ -34,7 +34,7 @@ bg_block
   out=$(do thing)
   process "$out"
 ) & bg_add $!
-bg_waitall
+bg_drain
 ```
 
 Note that `bg_block` must be run before `bg_add` in order to not launch more
@@ -52,25 +52,22 @@ Returns early and does not start `...cmd` when `bg_block` fails.
 Wait for exactly one process in `$BG_PIDS` to exit and returns its exit code.  
 Returns `0` when no processes are running.
 
-#### bg_block()
-
-Block as long as the current number of PIDs in `$BG_PIDS` is equal to or exceeds
-`$BG_MAXPARALLEL`.  
-Returns the exit code of the process whose completion resolved the blocking (if
-any, otherwise `0`)
-
 #### bg_killall([SIGNAL=TERM])
 
 Send `SIGNAL` to all processes in `$BG_PIDS`.
 
 Default signal: `TERM`
 
-#### bg_waitall([CONT=true])
+#### bg_block()
 
-Wait for all processes in `$BG_PIDS` to exit.  
-When `CONT=true` wait for all processes to complete and return `0` if all
-processes returned `0` otherwise return the exit code of the last failed
-process.  
+Runs `bg_drain $BG_MAXPARALLEL-1` (unless `$BG_MAXPARALLEL=0`, then it just
+returns 0).
+
+#### bg_drain([LVL=0 CONT=true])
+
+Wait until there are no more than `LVL` running processes.  
+When `CONT=true` return `0` if all processes that completed while draining
+returned `0` otherwise return the exit code of the last failed process.  
 When `CONT=false` return early if any of the processes exit with a non-zero
 code.
 
