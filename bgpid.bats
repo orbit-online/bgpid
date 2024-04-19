@@ -7,7 +7,6 @@ setup_file() {
 
 setup() {
   export BG_MAXPARALLEL=4
-  export BG_FAIL=true
 }
 
 ret() {
@@ -21,27 +20,27 @@ sleep_ret() {
 }
 export -f sleep_ret
 
-@test 'bg_drain returns 0 when all processes succeed' {
+@test 'bg_block 0 returns 0 when all processes succeed' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run true
-  bg_drain
+  bg_block 0
   "
 }
 
-@test 'bg_drain does not return before all exited' {
+@test 'bg_block 0 does not return before all exited' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run sleep_ret
   bg_run sleep_ret
-  bg_drain
+  bg_block 0
   [ \"\$(jobs -p)\" = '' ]"
 }
 
-@test 'bg_drain returns 1 when a process fails but not before all exited' {
+@test 'bg_block 0 returns 1 when a process fails but not before all exited' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   BG_FAIL=false
   bg_run sleep_ret
   bg_run ret 1
-  ! bg_drain
+  ! bg_block 0
   [ \"\$(jobs -p)\" = '' ]"
 }
 
@@ -50,13 +49,41 @@ export -f sleep_ret
   start=$(date +%s)
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run sleep_ret 2
+  bg_run sleep_ret 2
+  bg_run sleep_ret 2
   bg_run ret 1
-  bg_run ret
-  bg_run ret
   ! bg_run ret
   [ \"\$(jobs -p)\" = '' ]
   "
   (($(date +%s) - start > 1)) || false
+}
+
+@test 'bg_block 0 kills long running processes when BG_SIGNAL=TERM' {
+  local start
+  start=$(date +%s)
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
+  BG_SIGNAL=TERM
+  bg_run ret 1
+  bg_run sleep_ret 2
+  bg_run sleep_ret 2
+  bg_run sleep_ret 2
+  ! bg_block 0
+  [ \"\$(jobs -p)\" = '' ]
+  "
+  (($(date +%s) - start < 1)) || false
+}
+
+@test 'BG_MAXPARALLEL=-1 allows running unlimited processes' {
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -ex
+  BG_MAXPARALLEL=-1
+  bg_run ret 1
+  bg_run ret 1
+  bg_run ret 1
+  bg_run ret 1
+  bg_run ret 1
+  bg_run ret 1
+  bg_run ret 1
+  "
 }
 
 @test 'bg_run kills, drains and fails when BG_SIGNAL=TERM and a previous process has failed' {
@@ -64,9 +91,9 @@ export -f sleep_ret
   start=$(date +%s)
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   BG_SIGNAL=TERM
-  bg_run sleep_ret 2
-  bg_run sleep_ret 2
-  bg_run sleep_ret 2
+  bg_run sleep_ret 3
+  bg_run sleep_ret 3
+  bg_run sleep_ret 3
   bg_run ret 1
   ! bg_run ret
   [ \"\$(jobs -p)\" = '' ]
@@ -77,7 +104,7 @@ export -f sleep_ret
 @test 'subshell invocations do not inherit BG_PIDS' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run ret 1
-  (bg_drain)
+  (bg_block)
   "
 }
 

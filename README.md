@@ -46,19 +46,14 @@ Run `bg_block`, then start `...cmd` in the background and add its PID to
 `$BG_PIDS`.  
 Does not start `...cmd` if `bg_block` fails.
 
-#### bg_block()
+#### bg_block([MAX=$BG_MAX_PARALLEL])
 
-Runs `bg_drain $BG_MAXPARALLEL-1` (unless `$BG_MAXPARALLEL=0`, then it just
-returns 0).  
-If `bg_drain` returns a non-zero exit code, `kill -$BG_SIGNAL` is called for all
-remaining processes (if set), and then `bg_drain 0` is called.
-Returns `0` or the return code of `bg_drain 0` on failure.
-
-#### bg_drain([LVL=0])
-
-Wait until there are no more than `LVL` running processes.  
-Return `0` if all processes that completed while draining returned `0`
-otherwise return the exit code of the last failed process.
+Wait until there are no more than `$MAX` running processes
+(or none when `$MAX = 0`).  
+Return `0` if all processes that completed while blocking returned `0`
+otherwise call `kill -$BG_SIGNAL` for all remaining processes (if set),
+and wait for all processes to exit, then return the exit code of the process
+that caused the failure.
 
 #### bg_waitany()
 
@@ -91,7 +86,7 @@ Default: `<UNSET>`
 #### $BG_MAXPARALLEL
 
 The maximum number of processes to run in parallel.  
-Set to `0` to disable the limit.
+Set to `-1` to disable the limit.
 
 Default: `4`
 

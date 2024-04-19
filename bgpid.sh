@@ -21,25 +21,23 @@ bg_run() {
   "$@" & BG_PIDS+=($!)
 }
 
+# shellcheck disable=2120
 bg_block() {
-  [[ ${BG_MAXPARALLEL:-4} -gt 0 ]] || return 0
+  local lvl=$1
+  [[ -n $lvl ]] || lvl=${BG_MAXPARALLEL:-4}
+  [[ $lvl -ne -1 ]] || return 0
   local ret=0
-  bg_drain $((${BG_MAXPARALLEL:-4} - 1)) || ret=$?
+  while [[ ${#BG_PIDS[@]} -ne 0 && ${#BG_PIDS[@]} -ge $lvl ]]; do
+    bg_waitany || { ret=$?; break; }
+  done
   if [[ $ret -gt 0 ]]; then
     if [[ -n $BG_SIGNAL ]]; then
       [[ ${#BG_PIDS[@]} -eq 0 ]] || kill -"$BG_SIGNAL" "${BG_PIDS[@]}" 2>/dev/null || true
     fi
-    bg_drain 0 || ret=$?
+    while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
+      bg_waitany || true
+    done
   fi
-  return $ret
-}
-
-bg_drain() {
-  [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
-  local lvl=${1:-0} ret=0
-  while [[ ${#BG_PIDS[@]} -gt $lvl ]]; do
-    bg_waitany || ret=$?
-  done
   return $ret
 }
 
