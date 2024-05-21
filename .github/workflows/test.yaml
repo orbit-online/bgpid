@@ -2,8 +2,9 @@ name: Test
 
 on:
   push:
-    branches: [ '*' ]
-    tags: [ 'v*' ]
+    branches: ['*']
+    tags: ['v*']
+  workflow_call: {}
 
 jobs:
   lint:
@@ -18,13 +19,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Setup BATS
-      run: |
-        git clone --depth 1 --branch v1.10.0 https://github.com/bats-core/bats-core.git /tmp/bats
-        sudo /tmp/bats/install.sh /usr/local
-        rm -rf /tmp/bats
+    - name: Install bats
+      uses: bats-core/bats-action@2.0.0
     - name: Checkout
       uses: actions/checkout@v4
-    - uses: orbit-online/upkg@v0.14.0
+    - uses: orbit-online/upkg-install@v1
     - name: Run tests
       run: bats .

@@ -12,11 +12,7 @@ Tooling for handling background processes in Bash.
 
 ## Installation
 
-With [μpkg](https://github.com/orbit-online/upkg)
-
-```
-upkg install -g orbit-online/bgpid@<VERSION>
-```
+See [the latest release](https://github.com/orbit-online/bgpid/releases/latest) for instructions.
 
 ## Usage
 
