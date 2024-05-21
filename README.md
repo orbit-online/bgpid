@@ -34,7 +34,6 @@ bg_block
   out=$(do thing)
   process "$out"
 ) & bg_add $!
-bg_drain
 ```
 
 Note that `bg_block` must be run before `bg_add` in order to not launch more
@@ -52,10 +51,9 @@ Does not start `...cmd` if `bg_block` fails.
 Kill all running processes and wait for them to exit.  
 Always returns `0`.
 
-#### bg_block([MAX=$BG_MAX_PARALLEL])
+#### bg_block([MAX=$BG_MAXPARALLEL])
 
-Wait until there are no more than `$MAX` running processes
-(or none when `$MAX = 0`).  
+Wait until there are no more than `$MAX` running processes.  
 Return `0` if all processes that completed while blocking returned `0`
 otherwise call `kill -$BG_SIGNAL` for all remaining processes (if set),
 and wait for all processes to exit, then return the exit code of the process
@@ -63,12 +61,12 @@ that caused the failure.
 
 #### bg_waitany()
 
-Wait for exactly one process in `$BG_PIDS` to exit and returns its exit code.  
-Returns `0` when no processes are running.
+Wait for exactly one process in `$BG_PIDS` to exit and return its exit code.  
+Return `0` when no processes are running.
 
 #### bg_init()
 
-Initializes `$BG_PIDS` and `$BG_PIDS_OWNER`. This function is useful if you
+Initialize `$BG_PIDS` and `$BG_PIDS_OWNER`. This function is useful if you
 intend to read or modify `$BG_PIDS`.
 
 ### Global variables
