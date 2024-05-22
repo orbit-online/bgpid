@@ -12,12 +12,12 @@ bg_init() {
 bg_add() {
   bg_init || return $?
   BG_PIDS+=("$1")
-  bg_block || return $?
+  bg_block "${BG_MAXPARALLEL:-4}" || return $?
 }
 
 bg_run() {
   bg_init || return $?
-  bg_block || return $?
+  bg_block "${BG_MAXPARALLEL:-4}" || return $?
   "$@" & BG_PIDS+=($!)
 }
 
@@ -31,8 +31,7 @@ bg_killall() {
 
 # shellcheck disable=2120
 bg_block() {
-  local lvl=$1
-  [[ -n $lvl ]] || lvl=${BG_MAXPARALLEL:-4}
+  local lvl=${1:-0}
   [[ $lvl -ne -1 ]] || return 0
   local ret=0
   while [[ ${#BG_PIDS[@]} -ne 0 && ${#BG_PIDS[@]} -ge $lvl ]]; do

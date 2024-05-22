@@ -22,9 +22,28 @@ upkg install -g orbit-online/bgpid@<VERSION>
 
 ### Functions
 
+#### bg_run(...cmd)
+
+Run `bg_block $BG_MAXPARALLEL`, then start `...cmd` in the background and add
+its PID to `$BG_PIDS`.  
+Does not start `...cmd` if `bg_block` fails.
+
+#### bg_block([MAX=0])
+
+Wait until there are no more than `$MAX` running processes.  
+Return `0` if all processes that completed while blocking returned `0`
+otherwise call `kill -$BG_SIGNAL` for all remaining processes (if set),
+and wait for all processes to exit, then return the exit code of the process
+that caused the failure.
+
+#### bg_killall([SIGNAL=TERM])
+
+Kill all running processes and wait for them to exit.  
+Always returns `0`.
+
 #### bg_add(pid)
 
-Add the given PID to `$BG_PIDS`, then run `bg_block`.
+Add the given PID to `$BG_PIDS`, then run `bg_block $BG_MAXPARALLEL`.
 
 Useful when running subshells that you don't want to wrap in a function, e.g.:
 
@@ -39,25 +58,6 @@ bg_block
 Note that `bg_block` must be run before `bg_add` in order to not launch more
 processes than `$BG_MAXPARALLEL` allows. If you are fine with
 `$BG_MAXPARALLEL + 1` you can omit it.
-
-#### bg_run(...cmd)
-
-Run `bg_block`, then start `...cmd` in the background and add its PID to
-`$BG_PIDS`.  
-Does not start `...cmd` if `bg_block` fails.
-
-#### bg_killall([SIGNAL=TERM])
-
-Kill all running processes and wait for them to exit.  
-Always returns `0`.
-
-#### bg_block([MAX=$BG_MAXPARALLEL])
-
-Wait until there are no more than `$MAX` running processes.  
-Return `0` if all processes that completed while blocking returned `0`
-otherwise call `kill -$BG_SIGNAL` for all remaining processes (if set),
-and wait for all processes to exit, then return the exit code of the process
-that caused the failure.
 
 #### bg_waitany()
 

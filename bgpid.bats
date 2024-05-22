@@ -20,27 +20,27 @@ sleep_ret() {
 }
 export -f sleep_ret
 
-@test 'bg_block 0 returns 0 when all processes succeed' {
+@test 'bg_block returns 0 when all processes succeed' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run true
-  bg_block 0
+  bg_block
   "
 }
 
-@test 'bg_block 0 does not return before all exited' {
+@test 'bg_block does not return before all exited' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   bg_run sleep_ret
   bg_run sleep_ret
-  bg_block 0
+  bg_block
   [ \"\$(jobs -p)\" = '' ]"
 }
 
-@test 'bg_block 0 returns 1 when a process fails but not before all exited' {
+@test 'bg_block returns 1 when a process fails but not before all exited' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   BG_FAIL=false
   bg_run sleep_ret
   bg_run ret 1
-  ! bg_block 0
+  ! bg_block
   [ \"\$(jobs -p)\" = '' ]"
 }
 
@@ -58,7 +58,7 @@ export -f sleep_ret
   (($(date +%s) - start > 1)) || false
 }
 
-@test 'bg_block 0 kills long running processes when BG_SIGNAL=TERM' {
+@test 'bg_block kills long running processes when BG_SIGNAL=TERM' {
   local start
   start=$(date +%s)
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
@@ -67,7 +67,7 @@ export -f sleep_ret
   bg_run sleep_ret 2
   bg_run sleep_ret 2
   bg_run sleep_ret 2
-  ! bg_block 0
+  ! bg_block
   [ \"\$(jobs -p)\" = '' ]
   "
   (($(date +%s) - start < 1)) || false
