@@ -25,4 +25,10 @@ jobs:
       uses: actions/checkout@v4
     - uses: orbit-online/upkg-install@v1
     - name: Run tests
-      run: bats .
+      run: bats . --formatter tap13 tests | tee results.tap
+    - name: Generate test summary
+      uses: test-summary/action@v2
+      with:
+        paths: upkg/tests/results.tap
+        show: "fail, skip"
+      if: always()
