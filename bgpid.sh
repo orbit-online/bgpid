@@ -31,6 +31,7 @@ bg_killall() {
 
 # shellcheck disable=2120
 bg_block() {
+  bg_init || return $?
   local lvl=${1:-0}
   [[ $lvl -ne -1 ]] || return 0
   local ret=0
