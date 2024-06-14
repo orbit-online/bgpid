@@ -123,7 +123,14 @@ export -f sleep_ret
 @test 'bg_init fails when BASHPID is not set' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
   unset BASHPID
-  ! bg_run ret 1
+  ! bg_run ret 0
+  "
+}
+
+@test 'bg_run preserves \$!' {
+  bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
+  bg_run ret 0
+  [[ \${BG_PIDS[*]} = \$! ]] || exit 1
   "
 }
 

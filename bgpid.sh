@@ -16,7 +16,6 @@ bg_add() {
 }
 
 bg_run() {
-  bg_init || return $?
   bg_block "${BG_MAXPARALLEL:-4}" || return $?
   "$@" & BG_PIDS+=($!)
 }
