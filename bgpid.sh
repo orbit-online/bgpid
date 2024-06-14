@@ -21,6 +21,7 @@ bg_run() {
 }
 
 bg_killall() {
+  [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
   [[ ${#BG_PIDS[@]} -eq 0 ]] || kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
   while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
     bg_waitany || true
