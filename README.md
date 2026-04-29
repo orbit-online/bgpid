@@ -20,10 +20,12 @@ See [the latest release](https://github.com/orbit-online/bgpid/releases/latest) 
 
 #### bg_run(...cmd)
 
-Run `bg_block $BG_MAXPARALLEL`, then start `...cmd` in the background and add
-its PID to `$BG_PIDS`. `$!` is preserved (meaning it contains the PID of the
-process that was started).  
-Does not start `...cmd` if `bg_block` fails.
+Run `bg_block $(( BG_MAXPARALLEL - 1 ))` (or just `$BG_MAXPARALLEL` if
+`$BG_MAXPARALLEL <= 0`), then start `...cmd` in the background and add its PID
+to `$BG_PIDS`. `$!` is preserved (meaning its value is the PID of the process
+that was started).  
+Returns the return code of the `bg_block` call and does not start `...cmd` if
+`bg_block` returns with a non-zero return code.
 
 #### bg_block([MAX=0])
 
