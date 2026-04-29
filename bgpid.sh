@@ -48,25 +48,12 @@ bg_block() {
 
 bg_waitany() {
   [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
-  local pid found=false ret=0 bg_new_pids=()
-  local original_opts=$-; set +x
-  while (( ${#BG_PIDS[@]} > 0 )); do
-    for pid in "${BG_PIDS[@]}"; do
-      if ! $found && ! kill -0 "$pid" 2>/dev/null; then
-        wait "$pid" 2>/dev/null || ret=$?
-        found=true
-      else
-        bg_new_pids+=("$pid")
-      fi
-    done
-    if $found; then
-      BG_PIDS=("${bg_new_pids[@]}")
-      [[ $original_opts != *x* ]] || set -x
-      return $ret
-    else
-      bg_new_pids=()
-      sleep "${BG_POLLRATE:-0.05}"
-    fi
+  (( ${#BG_PIDS[@]} > 0 )) || return 0
+  local pid exited_pid ret=0 bg_new_pids=()
+  wait -fnp exited_pid "${BG_PIDS[@]}" || ret=$?
+  for pid in "${BG_PIDS[@]}"; do
+    [[ $pid = "$exited_pid" ]] || bg_new_pids+=("$pid")
   done
-  [[ $original_opts != *x* ]] || set -x
+  BG_PIDS=("${bg_new_pids[@]}")
+  return $ret
 }

@@ -61,7 +61,7 @@ processes than `$BG_MAXPARALLEL` allows. If you are fine with
 
 #### bg_waitany()
 
-Wait for exactly one process in `$BG_PIDS` to exit and return its exit code.  
+Wait for any process in `$BG_PIDS` to exit and return its exit code.  
 Return `0` when no processes are running.
 
 #### bg_init()
@@ -92,18 +92,6 @@ The maximum number of processes to run in parallel.
 Set to a negative value to disable the limit.
 
 Default: `4`
-
-#### $BG_POLLRATE
-
-The rate in seconds at which `bg_waitany()` should check whether one of the
-background processes has exited.
-
-Default: `0.05`
-
-_Note: This is needed because calling `wait -n id...` returns the status of all
-stopped processes, meaning failing exit codes may be hidden. If you know of a
-way to block the process until a PID changes status and then get the exit code
-of only that process, please open an issue, I'm all ears._
 
 #### $BG_PIDS_OWNER
 
