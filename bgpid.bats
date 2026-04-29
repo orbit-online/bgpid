@@ -35,16 +35,21 @@ export -f sleep_ret
   [ \"\$(jobs -p)\" = '' ]"
 }
 
-@test 'bg_block returns 1 when a process fails but not before all exited' {
+@test 'bg_block returns 1 when a process fails but not before no more than 3 processes are running' {
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
-  BG_FAIL=false
+  BG_MAXPARALLEL=-1
+  bg_run sleep_ret
+  bg_run sleep_ret
   bg_run sleep_ret
   bg_run ret 1
-  ! bg_block
-  [ \"\$(jobs -p)\" = '' ]"
+  bg_run sleep_ret
+  bg_run sleep_ret
+  ! bg_block 3
+  [ \"\$(jobs -p | wc -l)\" -gt 0 ]
+  [ \"\$(jobs -p | wc -l)\" -le 3 ]"
 }
 
-@test 'bg_run drains and fails when a previous process has failed' {
+@test 'bg_run returns non-zero when a previous process has failed' {
   local start
   start=$(date +%s)
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
@@ -53,12 +58,12 @@ export -f sleep_ret
   bg_run sleep_ret 2
   bg_run ret 1
   ! bg_run ret
-  [ \"\$(jobs -p)\" = '' ]
+  [ \"\$(jobs -p | wc -l)\" -eq 3 ]
   "
-  (($(date +%s) - start > 1)) || false
+  (($(date +%s) - start < 1)) || false
 }
 
-@test 'bg_block kills long running processes when BG_SIGNAL=TERM' {
+@test 'bg_block kills remaining processes when BG_SIGNAL=TERM' {
   local start
   start=$(date +%s)
   bash -ec "close_non_std_fds; source $BATS_TEST_DIRNAME/bgpid.sh; set -e
@@ -67,7 +72,7 @@ export -f sleep_ret
   bg_run sleep_ret 2
   bg_run sleep_ret 2
   bg_run sleep_ret 2
-  ! bg_block
+  ! bg_block 0
   [ \"\$(jobs -p)\" = '' ]
   "
   (($(date +%s) - start < 1)) || false

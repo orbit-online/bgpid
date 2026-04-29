@@ -31,23 +31,18 @@ bg_killall() {
   return 0
 }
 
-# shellcheck disable=2120
 bg_block() {
   bg_init || return $?
   local max=${1:-0}
-  [[ $max -ne -1 ]] || return 0
+  (( max >= 0 )) || return 0
   local ret=0
-  while [[ ${#BG_PIDS[@]} -ne 0 && ${#BG_PIDS[@]} -ge $max ]]; do
-    bg_waitany || { ret=$?; break; }
-  done
-  if [[ $ret -gt 0 ]]; then
-    if [[ -n $BG_SIGNAL ]]; then
-      [[ ${#BG_PIDS[@]} -eq 0 ]] || kill -"$BG_SIGNAL" "${BG_PIDS[@]}" 2>/dev/null || true
+  while (( ${#BG_PIDS[@]} > max )); do
+    bg_waitany || ret=$?
+    if [[ $ret -gt 0 && -n $BG_SIGNAL ]]; then
+      bg_killall "$BG_SIGNAL"
+      break
     fi
-    while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
-      bg_waitany || true
-    done
-  fi
+  done
   return $ret
 }
 

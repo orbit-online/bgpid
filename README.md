@@ -30,10 +30,12 @@ Returns the return code of the `bg_block` call and does not start `...cmd` if
 #### bg_block([MAX=0])
 
 Wait until there are no more than `$MAX` running processes.  
-Return `0` if all processes that completed while blocking returned `0`
-otherwise call `kill -$BG_SIGNAL` for all remaining processes (if set),
-and wait for all processes to exit, then return the exit code of the process
-that caused the failure.
+Return `0` if all processes that completed while blocking returned `0`.  
+otherwise, return the exit code of one of the failed processes.
+
+Set `$BG_SIGNAL` to have bg_block call `bg_killall $BG_SIGNAL` before returning
+with a non-zero exit code (this in turn means `bg_block` will only return once
+all process have exited, not when the `$MAX` threshhold is reached).
 
 #### bg_killall([SIGNAL=TERM])
 
@@ -79,16 +81,15 @@ a parent process run `bg_init()` first.
 
 #### $BG_SIGNAL
 
-The signal to send to processes when `bg_block` fails. Set this when you run
-processes that do not quit on their own or do not want to wait for the remaining
-processes to complete normally before failing in the parent process.
+The signal to send to all other processes when `bg_block` detects a failed
+process while blocking.
 
 Default: `<UNSET>`
 
 #### $BG_MAXPARALLEL
 
 The maximum number of processes to run in parallel.  
-Set to `-1` to disable the limit.
+Set to a negative value to disable the limit.
 
 Default: `4`
 
