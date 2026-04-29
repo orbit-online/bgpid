@@ -53,7 +53,6 @@ bg_waitany() {
   while (( ${#BG_PIDS[@]} > 0 )); do
     for pid in "${BG_PIDS[@]}"; do
       if ! $found && ! kill -0 "$pid" 2>/dev/null; then
-        [[ $original_opts != *x* ]] || set -x
         wait "$pid" 2>/dev/null || ret=$?
         found=true
       else
@@ -62,6 +61,7 @@ bg_waitany() {
     done
     if $found; then
       BG_PIDS=("${bg_new_pids[@]}")
+      [[ $original_opts != *x* ]] || set -x
       return $ret
     else
       bg_new_pids=()
