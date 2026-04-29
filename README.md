@@ -45,7 +45,6 @@ Add the given PID to `$BG_PIDS`, then run `bg_block $BG_MAXPARALLEL`.
 Useful when running subshells that you don't want to wrap in a function, e.g.:
 
 ```
-bg_block
 (
   out=$(do thing)
   process "$out"
@@ -71,8 +70,8 @@ intend to read or modify `$BG_PIDS`.
 #### $BG_PIDS
 
 Array containing the background PIDs bgpid is aware of. You may manually add
-PIDs to it (`BG_PIDS+=($!)`) if the API does not satisfy a use-case, this does
-not interfere with the inner workings of bgpid.  
+PIDs to it (`BG_PIDS+=($!)`) if e.g. the API does not satisfy a use-case, this
+does not interfere with the inner workings of bgpid.  
 However, to make sure you are not working with the array that was inherited from
 a parent process run `bg_init()` first.
 
@@ -117,7 +116,7 @@ this variable contains the owning process PID of `$BG_PIDS`.
 for task in "${tasks[@]}; do
   bg_run run_task "$task"
 done
-bg_block 0
+bg_block
 ```
 
 #### Run a set of watchers and exit when any of them fails
@@ -128,5 +127,5 @@ BG_MAXPARALLEL=-1 BG_SIGNAL=TERM
 bg_run program --watch
 bg_run other-program --wait
 bg_run server --foreground
-bg_block 0
+bg_block
 ```

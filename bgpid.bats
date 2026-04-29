@@ -83,6 +83,7 @@ export -f sleep_ret
   bg_run ret 1
   bg_run ret 1
   bg_run ret 1
+  [ \${#BG_PIDS[@]} -eq 7 ]
   "
 }
 

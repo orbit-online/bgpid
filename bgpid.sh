@@ -22,8 +22,8 @@ bg_run() {
 
 bg_killall() {
   [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
-  [[ ${#BG_PIDS[@]} -eq 0 ]] || kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
-  while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
+  (( ${#BG_PIDS[@]} == 0 )) || kill -"${1:-TERM}" "${BG_PIDS[@]}" 2>/dev/null || true
+  while (( ${#BG_PIDS[@]} > 0 )); do
     bg_waitany || true
   done
   return 0
@@ -53,7 +53,7 @@ bg_waitany() {
   [[ $BG_PIDS_OWNER = "$BASHPID" ]] || return 0
   local pid found=false ret=0 bg_new_pids=()
   local original_opts=$-; set +x
-  while [[ ${#BG_PIDS[@]} -gt 0 ]]; do
+  while (( ${#BG_PIDS[@]} > 0 )); do
     for pid in "${BG_PIDS[@]}"; do
       if ! $found && ! kill -0 "$pid" 2>/dev/null; then
         [[ $original_opts != *x* ]] || set -x
